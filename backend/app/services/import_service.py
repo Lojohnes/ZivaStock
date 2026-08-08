@@ -18,13 +18,23 @@ class ImportService:
         uploaded_by: int,
         total_records: int
     ) -> ImportJob:
-        """Create a new import job. `source` is retained as the public param
-        name for API backward-compat but stored as `entity_type` (the v2
-        `imports` table has no `source` column)."""
+        """Create a new import job.
+
+        The public `source` parameter describes the file origin (e.g. csv,
+        excel, sage_evolution), while the `entity_type` column records the
+        kind of records being imported and must satisfy the database check
+        constraint.
+        """
+        # Map file-format sources to the entity type they contain.
+        # Inventory imports are product imports.
+        entity_type = source or "products"
+        if entity_type in ("csv", "excel", "xlsx", "xls", "sage_evolution", "manual"):
+            entity_type = "products"
+
         import_batch = ImportJob(
             filename=filename,
             original_filename=filename,
-            entity_type=source or "products",
+            entity_type=entity_type,
             status="pending",
             total_records=total_records,
             success_count=0,
