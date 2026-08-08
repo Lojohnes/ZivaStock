@@ -185,7 +185,7 @@ class ImportService:
         return val
 
     def _process_dataframe(self, df: 'pd.DataFrame', field_mapping: dict, batch_id: int) -> dict:
-        """Shared logic to upsert products from a DataFrame"""
+        """Shared logic to upsert products from a DataFrame in batches"""
         import logging
         logger = logging.getLogger(__name__)
         logger.info(f"DataFrame columns: {list(df.columns)}")
@@ -202,6 +202,8 @@ class ImportService:
                          'item description', 'value', 'group', 'whse', 'unit cost',
                          'qty on hand', 'sage', 'page', 'description'}
 
+        # Build a deduplicated list of valid product rows keyed by barcode.
+        candidate_rows = []
         for index, row in df.iterrows():
             barcode = str(self._get_cell(row, field_mapping, 'barcode', '')).strip()
             # Skip empty, header repeat rows, date strings, and long text (report titles)
@@ -210,7 +212,7 @@ class ImportService:
                     or barcode.lower().startswith('sage ')
                     or barcode.lower().startswith('inventory ')
                     or barcode.lower().startswith('page ')
-                    or '/' in barcode and len(barcode) > 8  # date strings like 5/15/2026 9:44:57 AM
+                    or ('/' in barcode and len(barcode) > 8)  # date strings like 5/15/2026 9:44:57 AM
                     or len(barcode) > 50):
                 continue
 
@@ -223,24 +225,47 @@ class ImportService:
                     'system_quantity': float(self._get_cell(row, field_mapping, 'system_quantity', 0) or 0),
                     'unit_cost': float(self._get_cell(row, field_mapping, 'unit_cost', 0) or 0),
                 }
-
-                existing = self.db.query(Product).filter(
-                    Product.barcode == barcode
-                ).first()
-
-                if existing:
-                    for key, value in product_data.items():
-                        setattr(existing, key, value)
-                else:
-                    self.db.add(Product(**product_data))
-
-                self.db.commit()
-                success_count += 1
-
+                candidate_rows.append((index + 2, product_data))
             except Exception as e:
-                self.db.rollback()
                 error_count += 1
                 errors.append(f"Row {index + 2}: {str(e)}")
+
+        # For large files, process in chunks to avoid per-row commits/timeouts.
+        CHUNK_SIZE = 500
+        for chunk_start in range(0, len(candidate_rows), CHUNK_SIZE):
+            chunk = candidate_rows[chunk_start:chunk_start + CHUNK_SIZE]
+            chunk_barcodes = [data['barcode'] for _, data in chunk]
+            existing_map = {
+                p.barcode: p
+                for p in self.db.query(Product).filter(Product.barcode.in_(chunk_barcodes)).all()
+            }
+
+            processed_in_chunk = 0
+            for row_num, data in chunk:
+                try:
+                    existing = existing_map.get(data['barcode'])
+                    if existing:
+                        for key, value in data.items():
+                            setattr(existing, key, value)
+                    else:
+                        self.db.add(Product(**data))
+                        # Avoid adding a duplicate barcode again in the same flush.
+                        existing_map[data['barcode']] = None
+                    processed_in_chunk += 1
+                except Exception as e:
+                    error_count += 1
+                    errors.append(f"Row {row_num}: {str(e)}")
+
+            try:
+                self.db.commit()
+                success_count += processed_in_chunk
+            except Exception as e:
+                self.db.rollback()
+                # If the whole chunk fails, count it as errors.
+                failed = processed_in_chunk
+                success_count -= (processed_in_chunk - failed) if failed else 0
+                error_count += failed
+                errors.append(f"Chunk {chunk_start // CHUNK_SIZE + 1}: {str(e)}")
 
         self.update_import_batch(batch_id, "completed", success_count, error_count)
         return {'success_count': success_count, 'error_count': error_count, 'errors': errors[:50]}
