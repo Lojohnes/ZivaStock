@@ -23,7 +23,10 @@ import {
 } from '@mui/material'
 import { Add, PlayArrow, Pause, CheckCircle } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
-import { fetchSessions, createSession, startSession, Session } from '../store/slices/sessionSlice'
+import {
+  fetchSessions, createSession, startSession, pauseSession, resumeSession,
+  completeCounting, startReconciliation, completeSession, Session,
+} from '../store/slices/sessionSlice'
 import { Loading } from '../components/common/Loading'
 import { ErrorAlert } from '../components/common/ErrorAlert'
 import api from '../services/api'
@@ -32,6 +35,8 @@ const statusColor: Record<string, 'default' | 'primary' | 'success' | 'warning' 
   not_started: 'default',
   in_progress: 'primary',
   paused: 'warning',
+  counting_complete: 'warning',
+  reconciling: 'primary',
   completed: 'success',
   archived: 'default',
 }
@@ -50,15 +55,23 @@ export const Stocktake: React.FC = () => {
   const [locationForm, setLocationForm] = useState({ name: '', type: 'warehouse', address: '' })
   const [locationSaving, setLocationSaving] = useState(false)
   const [locationError, setLocationError] = useState('')
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => {
     dispatch(fetchSessions({}))
     api.get('/locations').then((r) => setLocations(r.data?.items || r.data || [])).catch(() => {})
   }, [dispatch])
 
-  const handleStart = (id: number) => {
-    dispatch(startSession(id))
+  const handleTransition = async (action: any, id: number) => {
+    setActionError('')
+    try {
+      await dispatch(action(id)).unwrap()
+    } catch (e: any) {
+      setActionError(e?.message || 'Unable to update the stocktake session')
+    }
   }
+
+  const handleStart = (id: number) => handleTransition(startSession, id)
 
   const handleCreateLocation = async () => {
     if (!locationForm.name.trim()) {
@@ -126,6 +139,7 @@ export const Stocktake: React.FC = () => {
       </Box>
 
       {error && <ErrorAlert title="Load Error" message={error} />}
+      {actionError && <Alert severity="error" sx={{ mb: 2 }}>{actionError}</Alert>}
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Create New Stocktake Session</DialogTitle>
@@ -252,18 +266,31 @@ export const Stocktake: React.FC = () => {
                     </Tooltip>
                   )}
                   {session.status === 'in_progress' && (
-                    <Tooltip title="Pause">
-                      <IconButton color="warning">
-                        <Pause />
-                      </IconButton>
-                    </Tooltip>
+                    <>
+                      <Tooltip title="Pause counting">
+                        <IconButton color="warning" onClick={() => handleTransition(pauseSession, session.id)}>
+                          <Pause />
+                        </IconButton>
+                      </Tooltip>
+                      <Button size="small" color="success" onClick={() => handleTransition(completeCounting, session.id)}>
+                        Counting complete
+                      </Button>
+                    </>
                   )}
-                  {session.status === 'in_progress' && (
-                    <Tooltip title="Complete">
-                      <IconButton color="success">
-                        <CheckCircle />
-                      </IconButton>
-                    </Tooltip>
+                  {session.status === 'paused' && (
+                    <Button size="small" onClick={() => handleTransition(resumeSession, session.id)}>
+                      Resume
+                    </Button>
+                  )}
+                  {session.status === 'counting_complete' && (
+                    <Button size="small" color="primary" onClick={() => handleTransition(startReconciliation, session.id)}>
+                      Reconcile
+                    </Button>
+                  )}
+                  {session.status === 'reconciling' && (
+                    <Button size="small" color="success" startIcon={<CheckCircle />} onClick={() => handleTransition(completeSession, session.id)}>
+                      Complete stocktake
+                    </Button>
                   )}
                 </TableCell>
               </TableRow>

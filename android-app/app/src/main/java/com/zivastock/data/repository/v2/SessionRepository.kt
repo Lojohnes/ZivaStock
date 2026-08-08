@@ -46,7 +46,7 @@ class SessionRepository @Inject constructor(
                 return Result.failure(Exception("Failed to fetch sessions: ${sessionsResponse.code()}"))
             }
 
-            val sessions = sessionsResponse.body()!!.map { it.toEntity() }
+            val sessions = sessionsResponse.body()!!.items.map { it.toEntity() }
             sessionDao.deleteAll()
             sessionDao.insertAll(sessions)
 

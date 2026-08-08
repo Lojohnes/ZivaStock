@@ -41,7 +41,7 @@ interface ZivaStockApi {
     suspend fun getShelfSections(): Response<List<ShelfSectionDto>>
 
     @GET("sessions")
-    suspend fun getSessions(): Response<List<StocktakeSessionDto>>
+    suspend fun getSessions(): Response<SessionsResponseDto>
 
     @POST("sessions")
     suspend fun createSession(@Body session: StocktakeSessionDto): Response<StocktakeSessionDto>

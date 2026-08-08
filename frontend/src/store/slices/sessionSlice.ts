@@ -46,13 +46,20 @@ export const createSession = createAsyncThunk(
   }
 )
 
-export const startSession = createAsyncThunk(
-  'sessions/startSession',
+const transitionSession = (action: string, path: string) => createAsyncThunk(
+  `sessions/${action}`,
   async (sessionId: number) => {
-    const response = await api.post(`/sessions/${sessionId}/start`)
+    const response = await api.post(`/sessions/${sessionId}/${path}`)
     return response.data
   }
 )
+
+export const startSession = transitionSession('startSession', 'start')
+export const pauseSession = transitionSession('pauseSession', 'pause')
+export const resumeSession = transitionSession('resumeSession', 'resume')
+export const completeCounting = transitionSession('completeCounting', 'counting-complete')
+export const startReconciliation = transitionSession('startReconciliation', 'reconcile')
+export const completeSession = transitionSession('completeSession', 'complete')
 
 const sessionSlice = createSlice({
   name: 'sessions',
@@ -85,9 +92,27 @@ const sessionSlice = createSlice({
       })
       .addCase(startSession.fulfilled, (state, action) => {
         const index = state.sessions.findIndex(s => s.id === action.payload.id)
-        if (index !== -1) {
-          state.sessions[index] = action.payload
-        }
+        if (index !== -1) state.sessions[index] = action.payload
+      })
+      .addCase(pauseSession.fulfilled, (state, action) => {
+        const index = state.sessions.findIndex(s => s.id === action.payload.id)
+        if (index !== -1) state.sessions[index] = action.payload
+      })
+      .addCase(resumeSession.fulfilled, (state, action) => {
+        const index = state.sessions.findIndex(s => s.id === action.payload.id)
+        if (index !== -1) state.sessions[index] = action.payload
+      })
+      .addCase(completeCounting.fulfilled, (state, action) => {
+        const index = state.sessions.findIndex(s => s.id === action.payload.id)
+        if (index !== -1) state.sessions[index] = action.payload
+      })
+      .addCase(startReconciliation.fulfilled, (state, action) => {
+        const index = state.sessions.findIndex(s => s.id === action.payload.id)
+        if (index !== -1) state.sessions[index] = action.payload
+      })
+      .addCase(completeSession.fulfilled, (state, action) => {
+        const index = state.sessions.findIndex(s => s.id === action.payload.id)
+        if (index !== -1) state.sessions[index] = action.payload
       })
   },
 })
