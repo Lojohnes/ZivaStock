@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import {
   Box,
@@ -8,7 +8,6 @@ import {
   Select,
   type SelectChangeEvent,
   MenuItem,
-  TextField,
   Button,
   Paper,
   CircularProgress,
@@ -34,9 +33,17 @@ const reportTypes = [
 export const Reports: React.FC = () => {
   const [reportType, setReportType] = useState('variance')
   const [sessionId, setSessionId] = useState('')
+  const [sessions, setSessions] = useState<{ id: number; name: string; status: string }[]>([])
   const [data, setData] = useState<unknown>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    api
+      .get('/sessions?page=1&limit=100')
+      .then((res) => setSessions(res.data.items || []))
+      .catch(() => {})
+  }, [])
 
   const handleGenerate = async () => {
     if (!sessionId) {
@@ -146,13 +153,25 @@ export const Reports: React.FC = () => {
             </Select>
           </FormControl>
 
-          <TextField
-            label="Session ID"
-            type="number"
-            value={sessionId}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSessionId(e.target.value)}
-            sx={{ minWidth: 150 }}
-          />
+          <FormControl sx={{ minWidth: 220 }}>
+            <InputLabel>Session</InputLabel>
+            <Select
+              value={sessionId}
+              label="Session"
+              onChange={(event: SelectChangeEvent<string>) => setSessionId(event.target.value)}
+            >
+              {sessions.length === 0 && (
+                <MenuItem value="" disabled>
+                  No sessions available
+                </MenuItem>
+              )}
+              {sessions.map((s) => (
+                <MenuItem key={s.id} value={String(s.id)}>
+                  {s.id} — {s.name} ({s.status})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <Button
             variant="contained"
