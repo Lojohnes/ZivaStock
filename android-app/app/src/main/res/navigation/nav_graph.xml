@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <action
+        android:id="@+id/action_global_login"
+        app:destination="@id/loginFragment"
+        app:popUpTo="@id/nav_graph"
+        app:popUpToInclusive="true" />
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.zivastock.ui.login.LoginFragment"
+        android:label="Login"
+        tools:layout="@layout/fragment_login" />
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.zivastock.ui.dashboard.DashboardFragment"
+        android:label="Dashboard"
+        tools:layout="@layout/fragment_dashboard" />
+    <fragment
+        android:id="@+id/firstCountFragment"
+        android:name="com.zivastock.ui.firstcount.FirstCountFragment"
+        android:label="First Count"
+        tools:layout="@layout/fragment_first_count" />
+    <fragment
+        android:id="@+id/secondCountFragment"
+        android:name="com.zivastock.ui.secondcount.SecondCountFragment"
+        android:label="Second Count"
+        tools:layout="@layout/fragment_second_count" />
+    <fragment
+        android:id="@+id/productsFragment"
+        android:name="com.zivastock.ui.products.ProductsFragment"
+        android:label="Products"
+        tools:layout="@layout/fragment_products" />
+    <fragment
+        android:id="@+id/butcheryFnVFragment"
+        android:name="com.zivastock.ui.butcheryfnv.ButcheryFnVFragment"
+        android:label="Butchery FnV"
+        tools:layout="@layout/fragment_butchery_fn_v" />
+    <fragment
+        android:id="@+id/consolidationFragment"
+        android:name="com.zivastock.ui.consolidation.ConsolidationFragment"
+        android:label="Comparison"
+        tools:layout="@layout/fragment_consolidation" />
+    <fragment
+        android:id="@+id/permissionsFragment"
+        android:name="com.zivastock.ui.permissions.PermissionsFragment"
+        android:label="User Permissions"
+        tools:layout="@layout/fragment_permissions" />
+    <fragment
+        android:id="@+id/syncFragment"
+        android:name="com.zivastock.ui.sync.SyncFragment"
+        android:label="Sync Status"
+        tools:layout="@layout/fragment_sync" />
+    <fragment
+        android:id="@+id/reportsFragment"
+        android:name="com.zivastock.ui.reports.ReportsFragment"
+        android:label="Reports"
+        tools:layout="@layout/fragment_reports" >
+        <action
+            android:id="@+id/action_reportsFragment_to_reportDetailFragment"
+            app:destination="@id/reportDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/reportDetailFragment"
+        android:name="com.zivastock.ui.reports.ReportDetailFragment"
+        android:label="Report"
+        tools:layout="@layout/fragment_report_detail">
+        <argument
+            android:name="reportType"
+            app:argType="string" />
+        <argument
+            android:name="sessionId"
+            android:defaultValue="-1L"
+            app:argType="long" />
+    </fragment>
+</navigation>

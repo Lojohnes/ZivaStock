@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/dashboardFragment"
+            android:icon="@drawable/ic_home"
+            android:title="@string/title_dashboard" />
+        <item
+            android:id="@+id/permissionsFragment"
+            android:icon="@android:drawable/ic_menu_manage"
+            android:title="User Permissions" />
+        <item
+            android:id="@+id/reportsFragment"
+            android:icon="@android:drawable/ic_menu_report_image"
+            android:title="Reports" />
+        <item
+            android:id="@+id/syncFragment"
+            android:icon="@android:drawable/ic_menu_rotate"
+            android:title="Sync Status" />
+    </group>
+    <item
+        android:id="@+id/logout"
+        android:icon="@android:drawable/ic_lock_power_off"
+        android:title="Logout" />
+</menu>

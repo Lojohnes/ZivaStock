@@ -1,0 +1,72 @@
+# --- Secrets / Environment ---
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- Python / Backend ---
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/htmlcov/
+backend/.coverage
+backend/coverage.xml
+backend/*.egg-info/
+backend/.eggs/
+
+# --- Node / Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.log
+frontend/.eslintcache
+frontend/coverage/
+
+# --- Android ---
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+android-app/*.iml
+android-app/.idea/caches
+android-app/.idea/libraries
+android-app/.idea/modules.xml
+android-app/.idea/workspace.xml
+android-app/.idea/navEditor.xml
+android-app/.idea/assetWizardSettings.xml
+android-app/captures/
+android-app/.externalNativeBuild/
+android-app/.cxx/
+*.apk
+*.ap_
+*.aab
+
+# --- IDE / Local tooling ---
+.vscode/
+.devin/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Project generated data ---
+logs/
+backups/
+exports/
+imports/
+reports/
+uploads/
+build_output.txt
+backend.log
+*.log
+
+# --- OS / Misc ---
+*.tmp
+*.bak

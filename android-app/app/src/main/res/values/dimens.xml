@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="chart_padding">16dp</dimen>
+    <dimen name="chart_bottom_label_height">32dp</dimen>
+    <dimen name="chart_top_value_height">24dp</dimen>
+    <dimen name="chart_group_spacing">32dp</dimen>
+    <dimen name="chart_bar_spacing">4dp</dimen>
+    <dimen name="chart_label_text">12sp</dimen>
+    <dimen name="chart_value_text">10sp</dimen>
+</resources>
