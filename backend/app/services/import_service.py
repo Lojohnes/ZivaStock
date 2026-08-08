@@ -10,7 +10,81 @@ from io import BytesIO
 class ImportService:
     def __init__(self, db: Session):
         self.db = db
-    
+
+    def _looks_like_no_header(self, df: pd.DataFrame) -> bool:
+        """Heuristic: the file likely has junk/title rows above the header."""
+        if df.empty:
+            return True
+        cols = [str(c) for c in df.columns]
+        if len(cols) <= 1:
+            return True
+        if all(c.startswith('Unnamed') for c in cols):
+            return True
+
+        unnamed_count = sum(1 for c in cols if c.startswith('Unnamed'))
+        if unnamed_count >= len(cols) - 1:
+            return True
+
+        # If the first column header looks like a report title rather than a label,
+        # treat the first data row as the header instead.
+        first_col = cols[0].lower()
+        title_keywords = (
+            'inventory', 'valuation', 'sage', 'report', 'generated',
+            'page', 'stock', 'item list', 'item master', 'product list',
+        )
+        if any(kw in first_col for kw in title_keywords):
+            return True
+
+        return False
+
+    def _find_header_row(self, raw: pd.DataFrame, max_rows: int = 50) -> int:
+        """Scan raw rows and return the first row that looks like a header."""
+        for i in range(min(max_rows, len(raw))):
+            row = raw.iloc[i]
+            vals = [
+                str(v).strip()
+                for v in row
+                if pd.notna(v) and str(v).strip()
+            ]
+            if len(vals) >= 3:
+                return i
+        return 0
+
+    def read_import_file(self, file_content: bytes, filename: str) -> pd.DataFrame:
+        """Read a CSV/Excel import file and return a DataFrame with the real
+        header row promoted to columns. Leading title/blank rows are skipped."""
+        fname = (filename or "").lower()
+        from io import BytesIO
+
+        if fname.endswith(".xlsx") or fname.endswith(".xls"):
+            df = pd.read_excel(BytesIO(file_content))
+            if self._looks_like_no_header(df):
+                raw = pd.read_excel(BytesIO(file_content), header=None)
+                header_idx = self._find_header_row(raw)
+                df = pd.read_excel(BytesIO(file_content), header=header_idx)
+        else:
+            # Try UTF-8 first, then fall back to Latin-1 for older Windows/Sage exports.
+            try:
+                df = pd.read_csv(BytesIO(file_content))
+            except UnicodeDecodeError:
+                df = pd.read_csv(BytesIO(file_content), encoding="latin-1")
+
+            if self._looks_like_no_header(df):
+                try:
+                    raw = pd.read_csv(BytesIO(file_content), header=None)
+                except UnicodeDecodeError:
+                    raw = pd.read_csv(BytesIO(file_content), header=None, encoding="latin-1")
+                header_idx = self._find_header_row(raw)
+                try:
+                    df = pd.read_csv(BytesIO(file_content), header=header_idx)
+                except UnicodeDecodeError:
+                    df = pd.read_csv(BytesIO(file_content), header=header_idx, encoding="latin-1")
+
+        # Drop fully blank rows and normalize column names
+        df = df.dropna(how="all").reset_index(drop=True)
+        df.columns = [str(c).strip() for c in df.columns]
+        return df
+
     def create_import_batch(
         self,
         filename: str,
@@ -144,19 +218,7 @@ class ImportService:
     def process_excel_import(self, file_content: bytes, field_mapping: dict, batch_id: int) -> dict:
         """Process Excel file import — auto-detects header row"""
         try:
-            # Try default header first
-            df = pd.read_excel(BytesIO(file_content))
-            # If columns are all unnamed, scan for the real header row
-            if all(str(c).startswith('Unnamed') for c in df.columns):
-                raw = pd.read_excel(BytesIO(file_content), header=None)
-                header_row = None
-                for i, row in raw.iterrows():
-                    vals = [str(v).strip() for v in row if pd.notna(v) and str(v).strip()]
-                    if len(vals) >= 3:
-                        header_row = i
-                        break
-                if header_row is not None:
-                    df = pd.read_excel(BytesIO(file_content), header=header_row)
+            df = self.read_import_file(file_content, "import.xlsx")
             return self._process_dataframe(df, field_mapping, batch_id)
         except Exception as e:
             self.db.rollback()
@@ -166,7 +228,7 @@ class ImportService:
     def process_csv_import(self, file_content: bytes, field_mapping: dict, batch_id: int) -> dict:
         """Process CSV file import"""
         try:
-            df = pd.read_csv(BytesIO(file_content))
+            df = self.read_import_file(file_content, "import.csv")
             return self._process_dataframe(df, field_mapping, batch_id)
         except Exception as e:
             self.db.rollback()

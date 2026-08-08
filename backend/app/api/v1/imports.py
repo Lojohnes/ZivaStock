@@ -21,30 +21,18 @@ async def upload_file(
     user_id: int = Depends(get_current_user_id)
 ):
     """Upload file for import and detect row count"""
-    import pandas as pd
-    from io import BytesIO
-
     file_content = await file.read()
 
-    # Detect row count from file content
-    df = None
+    import_service = ImportService(db)
+
+    # Read file and auto-detect header row (handles title/blank rows)
     try:
-        fname = (file.filename or "").lower()
-        if fname.endswith(".xlsx") or fname.endswith(".xls"):
-            df = pd.read_excel(BytesIO(file_content))
-            # If all columns unnamed, scan for real header row
-            if all(str(c).startswith('Unnamed') for c in df.columns):
-                raw = pd.read_excel(BytesIO(file_content), header=None)
-                for i, row in raw.iterrows():
-                    vals = [str(v).strip() for v in row if pd.notna(v) and str(v).strip()]
-                    if len(vals) >= 3:
-                        df = pd.read_excel(BytesIO(file_content), header=i)
-                        break
-        else:
-            df = pd.read_csv(BytesIO(file_content))
+        df = import_service.read_import_file(file_content, file.filename or "")
         total_records = len(df)
+        detected_columns = list(df.columns.astype(str))
     except Exception:
         total_records = 0
+        detected_columns = []
 
     # Save file to disk keyed by a temp name
     safe_name = f"{user_id}_{file.filename}"
@@ -52,13 +40,6 @@ async def upload_file(
     with open(save_path, "wb") as f:
         f.write(file_content)
 
-    # Detect column names
-    try:
-        detected_columns = list(df.columns.astype(str)) if df is not None else []
-    except Exception:
-        detected_columns = []
-
-    import_service = ImportService(db)
     import_batch = import_service.create_import_batch(
         filename=file.filename,
         source=source,
