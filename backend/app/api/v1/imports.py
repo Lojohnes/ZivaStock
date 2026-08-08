@@ -30,9 +30,17 @@ async def upload_file(
         df = import_service.read_import_file(file_content, file.filename or "")
         total_records = len(df)
         detected_columns = list(df.columns.astype(str))
-    except Exception:
-        total_records = 0
-        detected_columns = []
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not parse the uploaded file. Please ensure it is a valid CSV/Excel file with a header row. Error: {exc}"
+        )
+
+    if total_records == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No data rows found after the header. Please check the file contents."
+        )
 
     # Save file to disk keyed by a temp name
     safe_name = f"{user_id}_{file.filename}"

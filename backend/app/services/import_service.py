@@ -11,6 +11,13 @@ class ImportService:
     def __init__(self, db: Session):
         self.db = db
 
+    _HEADER_KEYWORDS = {
+        'barcode', 'item code', 'sku', 'product code', 'stock code',
+        'description', 'item description', 'qty', 'quantity', 'on hand',
+        'unit cost', 'cost', 'price', 'uom', 'unit', 'system quantity',
+        'system_quantity',
+    }
+
     def _looks_like_no_header(self, df: pd.DataFrame) -> bool:
         """Heuristic: the file likely has junk/title rows above the header."""
         if df.empty:
@@ -37,6 +44,14 @@ class ImportService:
 
         return False
 
+    def _row_looks_like_header(self, vals: list[str]) -> bool:
+        lowered = [v.lower() for v in vals]
+        # If any known product column keyword is present, treat it as a header.
+        has_header_keyword = any(
+            kw in v for v in lowered for kw in self._HEADER_KEYWORDS
+        )
+        return has_header_keyword or len(vals) >= 3
+
     def _find_header_row(self, raw: pd.DataFrame, max_rows: int = 50) -> int:
         """Scan raw rows and return the first row that looks like a header."""
         for i in range(min(max_rows, len(raw))):
@@ -46,9 +61,24 @@ class ImportService:
                 for v in row
                 if pd.notna(v) and str(v).strip()
             ]
-            if len(vals) >= 3:
+            if len(vals) >= 2 and self._row_looks_like_header(vals):
                 return i
         return 0
+
+    def _try_read_csv(self, file_content: bytes, header=None, encoding=None) -> pd.DataFrame:
+        from io import BytesIO
+        kwargs = {"sep": None, "engine": "python"}  # auto-detect delimiter
+        if header is not None:
+            kwargs["header"] = header
+        if encoding is not None:
+            kwargs["encoding"] = encoding
+        try:
+            return pd.read_csv(BytesIO(file_content), **kwargs)
+        except Exception:
+            # Fallback to standard comma parsing if auto-detection fails.
+            kwargs.pop("sep", None)
+            kwargs.pop("engine", None)
+            return pd.read_csv(BytesIO(file_content), **kwargs)
 
     def read_import_file(self, file_content: bytes, filename: str) -> pd.DataFrame:
         """Read a CSV/Excel import file and return a DataFrame with the real
@@ -65,20 +95,20 @@ class ImportService:
         else:
             # Try UTF-8 first, then fall back to Latin-1 for older Windows/Sage exports.
             try:
-                df = pd.read_csv(BytesIO(file_content))
+                df = self._try_read_csv(file_content)
             except UnicodeDecodeError:
-                df = pd.read_csv(BytesIO(file_content), encoding="latin-1")
+                df = self._try_read_csv(file_content, encoding="latin-1")
 
             if self._looks_like_no_header(df):
                 try:
-                    raw = pd.read_csv(BytesIO(file_content), header=None)
+                    raw = self._try_read_csv(file_content, header=None)
                 except UnicodeDecodeError:
-                    raw = pd.read_csv(BytesIO(file_content), header=None, encoding="latin-1")
+                    raw = self._try_read_csv(file_content, header=None, encoding="latin-1")
                 header_idx = self._find_header_row(raw)
                 try:
-                    df = pd.read_csv(BytesIO(file_content), header=header_idx)
+                    df = self._try_read_csv(file_content, header=header_idx)
                 except UnicodeDecodeError:
-                    df = pd.read_csv(BytesIO(file_content), header=header_idx, encoding="latin-1")
+                    df = self._try_read_csv(file_content, header=header_idx, encoding="latin-1")
 
         # Drop fully blank rows and normalize column names
         df = df.dropna(how="all").reset_index(drop=True)
