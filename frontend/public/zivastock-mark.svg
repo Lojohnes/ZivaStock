@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">ZivaStock icon</title>
+  <defs><linearGradient id="cube" x1="18%" y1="85%" x2="86%" y2="18%"><stop offset="0" stop-color="#08b48f"/><stop offset="0.5" stop-color="#08a7bb"/><stop offset="1" stop-color="#0784c9"/></linearGradient></defs>
+  <g fill="none" stroke="url(#cube)" stroke-width="30" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M256 54 454 173v228L256 466 58 401V173z"/>
+    <path d="m58 173 198 119 198-119"/>
+    <path d="M256 292v174"/>
+  </g>
+  <path fill="url(#cube)" d="m58 173 114 69 49-30-114-69z"/>
+</svg>

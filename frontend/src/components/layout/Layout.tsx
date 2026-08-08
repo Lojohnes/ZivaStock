@@ -30,6 +30,7 @@ export const Layout: React.FC = () => {
           >
             <MenuIcon />
           </IconButton>
+          <Box component="img" src="/zivastock-mark.svg" alt="" aria-hidden="true" sx={{ width: 34, height: 34, mr: 1 }} />
           <Typography variant="h6" noWrap component="div">
             ZivaStock
           </Typography>

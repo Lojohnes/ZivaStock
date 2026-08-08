@@ -1,5 +1,5 @@
 import React from 'react'
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Divider } from '@mui/material'
+import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Divider } from '@mui/material'
 import { Dashboard, Inventory, Assignment, Report, People, Security, Logout, CloudUpload } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -31,6 +31,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onDrawerToggle }) 
 
   const drawer = (
     <div>
+      <Box sx={{ px: 2, py: 2, display: 'flex', justifyContent: 'center' }}>
+        <Box component="img" src="/zivastock-logo.svg" alt="ZivaStock" sx={{ width: '100%', maxWidth: 205, height: 112, objectFit: 'contain' }} />
+      </Box>
       <Toolbar />
       <Divider />
       <List>

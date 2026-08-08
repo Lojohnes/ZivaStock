@@ -8,11 +8,18 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_launcher" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ZivaStock"
+        android:text="@string/app_name"
         android:textColor="@color/text_on_primary"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:textStyle="bold" />
 </LinearLayout>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Box, Container, TextField, Button, Typography, Paper, Alert, Link as MuiLink } from '@mui/material'
+import { Box, Container, TextField, Button, Paper, Alert, Link as MuiLink } from '@mui/material'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAppDispatch } from '../hooks/redux'
 import { login } from '../store/slices/authSlice'
@@ -35,12 +35,7 @@ export const Login: React.FC = () => {
         }}
       >
         <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h5" align="center" gutterBottom>
-            ZivaStock
-          </Typography>
-          <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
-            Enterprise Stocktake System
-          </Typography>
+          <Box component="img" src="/zivastock-logo.svg" alt="ZivaStock" sx={{ display: 'block', width: '100%', height: 180, objectFit: 'contain', mb: 2 }} />
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <TextField

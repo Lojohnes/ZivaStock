@@ -12,21 +12,12 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ZivaStock"
-            android:textColor="@color/primary"
-            android:textSize="32sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Enterprise Stocktake"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:contentDescription="@string/app_name"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_launcher" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
