@@ -64,7 +64,7 @@ export const Roles: React.FC = () => {
 
   useEffect(() => {
     fetchData()
-    dispatch(fetchUsers({ page: 1, limit: 1000 }))
+    dispatch(fetchUsers({ page: 1, limit: 100 }))
   }, [dispatch])
 
   const handleOpen = (role: Role) => {
