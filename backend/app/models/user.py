@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, SmallInteger, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, SmallInteger, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID, INET
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -16,6 +16,7 @@ class User(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     phone_number = Column(String(30), nullable=True)
+    profile_picture = Column(Text, nullable=True)
     role_id = Column(BigInteger, ForeignKey("roles.id"), nullable=False, index=True)
     is_active = Column(Boolean, default=True, index=True)
     is_locked = Column(Boolean, default=False, nullable=False)

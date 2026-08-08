@@ -1,9 +1,12 @@
 import React from 'react'
-import { Menu, MenuItem, IconButton } from '@mui/material'
-import { AccountCircle } from '@mui/icons-material'
+import { Avatar, Menu, MenuItem, IconButton } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
+import { useAppSelector } from '../../hooks/redux'
 
 export const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
+  const navigate = useNavigate()
+  const user = useAppSelector((state) => state.auth.user)
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -23,7 +26,9 @@ export const Header: React.FC = () => {
         onClick={handleMenu}
         color="inherit"
       >
-        <AccountCircle />
+        <Avatar src={user?.profile_picture || undefined} sx={{ width: 32, height: 32 }}>
+          {user?.first_name?.charAt(0) || 'U'}
+        </Avatar>
       </IconButton>
       <Menu
         id="menu-appbar"
@@ -40,8 +45,8 @@ export const Header: React.FC = () => {
         open={Boolean(anchorEl)}
         onClose={handleClose}
       >
-        <MenuItem onClick={handleClose}>Profile</MenuItem>
-        <MenuItem onClick={handleClose}>Settings</MenuItem>
+        <MenuItem onClick={() => { handleClose(); navigate('/profile') }}>Profile</MenuItem>
+        <MenuItem onClick={() => { handleClose(); navigate('/settings') }}>Settings</MenuItem>
       </Menu>
     </>
   )

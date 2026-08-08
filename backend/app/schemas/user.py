@@ -20,6 +20,7 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
     last_name: Optional[str] = Field(None, min_length=1, max_length=100)
     phone_number: Optional[str] = Field(None, max_length=30)
+    profile_picture: Optional[str] = None
     role_id: Optional[int] = None
     is_active: Optional[bool] = None
     is_locked: Optional[bool] = None
@@ -32,6 +33,7 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     phone_number: Optional[str]
+    profile_picture: Optional[str] = None
     role_id: int
     is_active: bool
     is_locked: bool

@@ -6,6 +6,8 @@ interface User {
   email: string
   first_name: string
   last_name: string
+  phone_number?: string | null
+  profile_picture?: string | null
   role_id: number
   is_active: boolean
 }
@@ -54,6 +56,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
+    setUser: (state, action) => {
+      state.user = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -98,5 +103,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { clearError } = authSlice.actions
+export const { clearError, setUser } = authSlice.actions
 export default authSlice.reducer

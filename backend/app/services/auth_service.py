@@ -52,6 +52,7 @@ class AuthService:
             first_name=user_with_role.first_name,
             last_name=user_with_role.last_name,
             phone_number=user_with_role.phone_number,
+            profile_picture=user_with_role.profile_picture,
             role_id=user_with_role.role_id,
             is_active=user_with_role.is_active,
             is_locked=user_with_role.is_locked,

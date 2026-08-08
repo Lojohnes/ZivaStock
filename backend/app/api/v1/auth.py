@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import decode_token
-from app.schemas.user import LoginRequest, TokenResponse, RefreshTokenRequest, UserWithRole, RegisterRequest, UserCreate
+from app.schemas.user import LoginRequest, TokenResponse, RefreshTokenRequest, UserWithRole, RegisterRequest, UserCreate, UserUpdate
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from app.api.deps import get_current_user
@@ -53,6 +53,36 @@ def login(login_data: LoginRequest, request: Request, db: Session = Depends(get_
     user_service.update_last_login(user.id, ip_address=request.client.host if request.client else None)
 
     return auth_service.create_tokens(user)
+
+
+@router.put("/me", response_model=UserWithRole)
+def update_me(user_data: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Update the authenticated user's profile details and picture."""
+    user_service = UserService(db)
+    updated_user = user_service.update_user(current_user.id, UserUpdate(
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        phone_number=user_data.phone_number,
+        profile_picture=user_data.profile_picture,
+    ))
+    permission_names = [p.name for p in updated_user.role.permissions] if updated_user.role else []
+    return UserWithRole(
+        id=updated_user.id,
+        uuid=updated_user.uuid,
+        email=updated_user.email,
+        first_name=updated_user.first_name,
+        last_name=updated_user.last_name,
+        phone_number=updated_user.phone_number,
+        profile_picture=updated_user.profile_picture,
+        role_id=updated_user.role_id,
+        is_active=updated_user.is_active,
+        is_locked=updated_user.is_locked,
+        last_login_at=updated_user.last_login_at,
+        created_at=updated_user.created_at,
+        updated_at=updated_user.updated_at,
+        role=updated_user.role,
+        permissions=permission_names,
+    )
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -107,6 +137,7 @@ def get_me(current_user: User = Depends(get_current_user)):
         first_name=current_user.first_name,
         last_name=current_user.last_name,
         phone_number=current_user.phone_number,
+        profile_picture=current_user.profile_picture,
         role_id=current_user.role_id,
         is_active=current_user.is_active,
         is_locked=current_user.is_locked,
