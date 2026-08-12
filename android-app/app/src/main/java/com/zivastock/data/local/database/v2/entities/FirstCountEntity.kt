@@ -13,6 +13,7 @@ import androidx.room.PrimaryKey
     val shelfSectionId: Long = 0,
     val userId: Long = 0,
     val fileNumber: String? = null,
+    val sectionNumber: String? = null,
     val remarks: String? = null,
     val quantity: Double = 0.0,
     val clientId: String? = null,

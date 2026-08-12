@@ -113,6 +113,7 @@ class SecondCountViewModel @Inject constructor(
 
     fun saveCount(
         fileNumber: String?,
+        sectionNumber: String?,
         shelfSectionId: Long,
         quantity: Double,
         remarks: String?
@@ -130,6 +131,7 @@ class SecondCountViewModel @Inject constructor(
                 userId = userId,
                 firstCountId = null,
                 fileNumber = fileNumber?.takeIf { it.isNotBlank() },
+                sectionNumber = sectionNumber?.takeIf { it.isNotBlank() },
                 remarks = remarks?.takeIf { it.isNotBlank() },
                 quantity = quantity,
                 clientId = null,

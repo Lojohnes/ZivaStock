@@ -63,17 +63,17 @@ class SecondCountFragment : Fragment() {
         viewModel.product.observe(viewLifecycleOwner) { product ->
             if (product != null) {
                 binding.etProductName.setText(product.description)
-                binding.etSystemQuantity.setText(product.systemQuantity.toString())
+
             }
         }
 
         viewModel.wrongProduct.observe(viewLifecycleOwner) { isWrong ->
             if (isWrong) {
                 binding.etProductName.setText("##WRONG PRODUCT CODE##")
-                binding.etSystemQuantity.text?.clear()
+
             } else if (viewModel.product.value == null) {
                 binding.etProductName.text?.clear()
-                binding.etSystemQuantity.text?.clear()
+
             }
         }
 
@@ -123,6 +123,7 @@ class SecondCountFragment : Fragment() {
 
         viewModel.saveCount(
             fileNumber = binding.spinnerFileNo.text.toString(),
+            sectionNumber = binding.etSectionNumber.text.toString(),
             shelfSectionId = sectionId,
             quantity = quantity,
             remarks = null
@@ -130,10 +131,10 @@ class SecondCountFragment : Fragment() {
     }
 
     private fun clearForm() {
-        binding.etQuantity.setText("0.00")
+        binding.etQuantity.text?.clear()
         binding.etBarcode.text?.clear()
         binding.etProductName.text?.clear()
-        binding.etSystemQuantity.text?.clear()
+        binding.etSectionNumber.text?.clear()
     }
 
     override fun onDestroyView() {

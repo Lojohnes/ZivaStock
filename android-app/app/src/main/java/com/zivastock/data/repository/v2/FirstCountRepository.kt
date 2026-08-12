@@ -177,6 +177,8 @@ class FirstCountRepository @Inject constructor(
             productId = productId,
             shelfSectionId = shelfSectionId,
             userId = userId,
+            fileNumber = fileNumber,
+            sectionNumber = sectionNumber,
             quantity = quantity,
             clientId = clientId,
             deviceId = deviceId,

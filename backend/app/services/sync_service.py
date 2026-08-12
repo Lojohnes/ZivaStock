@@ -124,6 +124,8 @@ class SyncService:
                     "session_id": c.session_id,
                     "product_id": c.product_id,
                     "shelf_section_id": c.shelf_section_id,
+                    "file_number": c.file_number,
+                    "section_number": c.section_number,
                     "quantity": float(c.quantity),
                     "counted_at": c.counted_at.isoformat(),
                 }
@@ -135,6 +137,8 @@ class SyncService:
                     "session_id": c.session_id,
                     "product_id": c.product_id,
                     "shelf_section_id": c.shelf_section_id,
+                    "file_number": c.file_number,
+                    "section_number": c.section_number,
                     "quantity": float(c.quantity),
                     "counted_at": c.counted_at.isoformat(),
                 }

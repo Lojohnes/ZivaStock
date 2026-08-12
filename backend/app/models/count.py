@@ -12,6 +12,8 @@ class FirstCount(Base):
     product_id = Column(BigInteger, ForeignKey("products.id"), nullable=False, index=True)
     shelf_section_id = Column(BigInteger, ForeignKey("shelf_sections.id"), nullable=False, index=True)
     user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False, index=True)
+    file_number = Column(String(100), nullable=True)
+    section_number = Column(String(100), nullable=True)
     quantity = Column(Numeric(18, 4), nullable=False)
     client_id = Column(String(100), nullable=True)
     device_id = Column(String(100), nullable=True)

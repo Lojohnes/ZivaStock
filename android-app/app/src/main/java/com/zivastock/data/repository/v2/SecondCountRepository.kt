@@ -177,6 +177,8 @@ class SecondCountRepository @Inject constructor(
             productId = productId,
             shelfSectionId = shelfSectionId,
             userId = userId,
+            fileNumber = fileNumber,
+            sectionNumber = sectionNumber,
             firstCountId = firstCountId,
             quantity = quantity,
             clientId = clientId,

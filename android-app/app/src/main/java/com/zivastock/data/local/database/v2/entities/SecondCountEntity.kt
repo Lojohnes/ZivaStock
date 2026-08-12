@@ -14,6 +14,7 @@ import androidx.room.PrimaryKey
     val userId: Long = 0,
     val firstCountId: Long? = null,
     val fileNumber: String? = null,
+    val sectionNumber: String? = null,
     val remarks: String? = null,
     val quantity: Double = 0.0,
     val clientId: String? = null,

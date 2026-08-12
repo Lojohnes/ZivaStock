@@ -8,6 +8,8 @@ class CountBase(BaseModel):
     session_id: int
     product_id: int
     shelf_section_id: int
+    file_number: Optional[str] = None
+    section_number: Optional[str] = None
     quantity: Decimal = Field(..., ge=0)
     client_id: Optional[str] = None
     device_id: Optional[str] = None
@@ -32,6 +34,8 @@ class FirstCountResponse(BaseModel):
     product_id: int
     shelf_section_id: int
     user_id: int
+    file_number: Optional[str]
+    section_number: Optional[str]
     quantity: Decimal
     client_id: Optional[str]
     device_id: Optional[str]
