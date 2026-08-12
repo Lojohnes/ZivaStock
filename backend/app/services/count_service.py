@@ -2,7 +2,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.models.count import FirstCount, SecondCount
 from app.models.product import Product
-from app.models.location import ShelfSection
+from app.models.location import Shelf, ShelfSection
+from app.models.session import StocktakeSession
 from app.schemas.count import FirstCountCreate, SecondCountCreate, CountUpdate
 from typing import Optional, List, Tuple
 from datetime import datetime
@@ -18,13 +19,39 @@ class CountService:
     def __init__(self, db: Session):
         self.db = db
 
-    def _verify_scope(self, product_id: int, shelf_section_id: int):
+    def _resolve_shelf_section(self, session_id: int, shelf_section_id: int) -> int:
+        if shelf_section_id:
+            section = self.db.query(ShelfSection).filter(ShelfSection.id == shelf_section_id).first()
+            if section:
+                return section.id
+
+        session = self.db.query(StocktakeSession).filter(StocktakeSession.id == session_id).first()
+        if not session:
+            raise ValueError("Session not found")
+
+        section = (
+            self.db.query(ShelfSection)
+            .join(Shelf, ShelfSection.shelf_id == Shelf.id)
+            .filter(Shelf.location_id == session.location_id)
+            .order_by(ShelfSection.id)
+            .first()
+        )
+        if section:
+            return section.id
+
+        shelf = Shelf(location_id=session.location_id, name="General")
+        self.db.add(shelf)
+        self.db.flush()
+        section = ShelfSection(shelf_id=shelf.id, name="General")
+        self.db.add(section)
+        self.db.flush()
+        return section.id
+
+    def _verify_scope(self, product_id: int, session_id: int, shelf_section_id: int) -> int:
         product = self.db.query(Product).filter(Product.id == product_id).first()
         if not product:
             raise ValueError("Product not found")
-        section = self.db.query(ShelfSection).filter(ShelfSection.id == shelf_section_id).first()
-        if not section:
-            raise ValueError("Shelf section not found")
+        return self._resolve_shelf_section(session_id, shelf_section_id)
 
     # -------------------------------------------------------------------
     # First Counts
@@ -56,7 +83,10 @@ class CountService:
     def create_first_count(self, count_data: FirstCountCreate, user_id: int) -> FirstCount:
         """Create (or consolidate, i.e. overwrite quantity for) a first count
         within the unique (session, product, shelf_section, user) scope."""
-        self._verify_scope(count_data.product_id, count_data.shelf_section_id)
+        resolved_section_id = self._verify_scope(
+            count_data.product_id, count_data.session_id, count_data.shelf_section_id
+        )
+        count_data.shelf_section_id = resolved_section_id
 
         existing = self.db.query(FirstCount).filter(
             FirstCount.session_id == count_data.session_id,
@@ -132,7 +162,10 @@ class CountService:
         """Create (or consolidate) a second count. Rejects the write if the
         submitting user already performed the linked first count (segregation
         of duties), whether caught here or by the DB trigger."""
-        self._verify_scope(count_data.product_id, count_data.shelf_section_id)
+        resolved_section_id = self._verify_scope(
+            count_data.product_id, count_data.session_id, count_data.shelf_section_id
+        )
+        count_data.shelf_section_id = resolved_section_id
 
         if count_data.first_count_id:
             first_count = self.get_first_count(count_data.first_count_id)

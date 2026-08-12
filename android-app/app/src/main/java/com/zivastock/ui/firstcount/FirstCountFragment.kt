@@ -7,10 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.zivastock.R
-import com.zivastock.data.local.database.v2.entities.ShelfSectionEntity
 import com.zivastock.databinding.FragmentFirstCountBinding
 import com.zivastock.presentation.scanner.ScannerActivity
 import com.zivastock.sync.SyncScheduler
@@ -47,10 +47,18 @@ class FirstCountFragment : Fragment() {
         binding.screenTitle.text = getString(R.string.title_firstcount)
 
         setupQuantityControls()
+        setupBarcodeLookup()
         setupBarcodeScan()
 
         binding.btnSave.setOnClickListener { saveFirstCount() }
         binding.btnCancel.setOnClickListener { clearForm() }
+
+        viewModel.activeSession.observe(viewLifecycleOwner) { session ->
+            binding.spinnerFileNo.setText(session?.name.orEmpty())
+        }
+        viewModel.locations.observe(viewLifecycleOwner) { locations ->
+            binding.spinnerLocation.setText(locations.firstOrNull()?.name.orEmpty())
+        }
 
         viewModel.product.observe(viewLifecycleOwner) { product ->
             if (product != null) {
@@ -96,6 +104,13 @@ class FirstCountFragment : Fragment() {
         binding.etQuantity.setText((current + delta).coerceAtLeast(0.0).toString())
     }
 
+    private fun setupBarcodeLookup() {
+        binding.etBarcode.doAfterTextChanged { text ->
+            val barcode = text?.toString()?.trim().orEmpty()
+            if (barcode.isNotEmpty()) viewModel.onBarcodeScanned(barcode)
+        }
+    }
+
     private fun setupBarcodeScan() {
         binding.etBarcodeLayout.setEndIconOnClickListener {
             barcodeLauncher.launch(Intent(requireContext(), ScannerActivity::class.java))
@@ -104,11 +119,6 @@ class FirstCountFragment : Fragment() {
 
     private fun saveFirstCount() {
         val sectionId = viewModel.defaultShelfSectionId()
-        if (sectionId == 0L) {
-            Toast.makeText(requireContext(), "No shelf section is configured for the active session", Toast.LENGTH_LONG).show()
-            return
-        }
-
         val quantity = binding.etQuantity.text.toString().toDoubleOrNull() ?: 0.0
 
         viewModel.saveCount(
