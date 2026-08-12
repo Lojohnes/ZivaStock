@@ -11,6 +11,7 @@ import { Register } from './pages/Register'
 import { Import } from './pages/Import'
 import { Profile } from './pages/Profile'
 import { Settings } from './pages/Settings'
+import { Counts } from './pages/Counts'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="products" element={<Products />} />
         <Route path="import" element={<Import />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="counts" element={<Counts />} />
         <Route path="users" element={<Users />} />
         <Route path="roles" element={<Roles />} />
         <Route path="profile" element={<Profile />} />

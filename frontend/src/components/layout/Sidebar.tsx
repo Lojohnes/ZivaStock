@@ -20,6 +20,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onDrawerToggle }) 
     { text: 'Products', icon: <Assignment />, path: '/products' },
     { text: 'Import Inventory', icon: <CloudUpload />, path: '/import' },
     { text: 'Reports', icon: <Report />, path: '/reports' },
+    { text: 'Counts', icon: <Assignment />, path: '/counts' },
     { text: 'Users', icon: <People />, path: '/users' },
     { text: 'Roles & Permissions', icon: <Security />, path: '/roles' },
   ]

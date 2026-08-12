@@ -35,6 +35,26 @@ def get_session_progress(
     return report_service.get_session_progress(session_id)
 
 
+@router.get("/first-counts")
+def generate_first_counts_report(session_id: int = Query(...), file_number: Optional[str] = Query(None), section_number: Optional[str] = Query(None), db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    return ReportService(db).generate_count_report(session_id, "first", file_number, section_number)
+
+
+@router.get("/second-counts")
+def generate_second_counts_report(session_id: int = Query(...), file_number: Optional[str] = Query(None), section_number: Optional[str] = Query(None), db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    return ReportService(db).generate_count_report(session_id, "second", file_number, section_number)
+
+
+@router.get("/comparison")
+def generate_comparison_report(session_id: int = Query(...), file_number: Optional[str] = Query(None), section_number: Optional[str] = Query(None), db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    return ReportService(db).generate_comparison_report(session_id, file_number, section_number)
+
+
+@router.get("/consolidated")
+def generate_consolidated_report(session_id: int = Query(...), file_number: Optional[str] = Query(None), section_number: Optional[str] = Query(None), db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    return ReportService(db).generate_consolidated_report(session_id, file_number, section_number)
+
+
 @router.get("/duplicates")
 def generate_duplicate_report(
     session_id: int = Query(...),

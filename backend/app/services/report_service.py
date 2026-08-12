@@ -30,11 +30,9 @@ class ReportService:
         rows = self.db.execute(text("""
             SELECT p.id AS product_id, p.barcode, p.description,
                    p.unit_of_measure, p.system_quantity, p.unit_cost,
-                   COALESCE(SUM(fc.quantity), 0) AS first_count_quantity,
-                   COALESCE(SUM(sc.quantity), 0) AS second_count_quantity
+                   COALESCE(SUM(fc.quantity), 0) AS first_count_quantity
             FROM products p
             LEFT JOIN first_counts fc ON fc.product_id = p.id AND fc.session_id = :session_id
-            LEFT JOIN second_counts sc ON sc.product_id = p.id AND sc.session_id = :session_id
             WHERE p.is_active = TRUE
             GROUP BY p.id, p.barcode, p.description, p.unit_of_measure, p.system_quantity
             ORDER BY p.id
@@ -44,13 +42,11 @@ class ReportService:
         for row in rows:
             item = dict(row)
             first_qty = float(item.pop("first_count_quantity") or 0)
-            second_qty = float(item.pop("second_count_quantity") or 0)
-            counted_qty = second_qty if second_qty else first_qty
+            counted_qty = first_qty
             system_qty = float(item.get("system_quantity") or 0)
             unit_cost = float(item.get("unit_cost") or 0)
             item.update({
                 "first_count_quantity": first_qty,
-                "second_count_quantity": second_qty,
                 "final_quantity": counted_qty,
                 "variance_quantity": counted_qty - system_qty,
                 "variance_value": (counted_qty - system_qty) * unit_cost,
@@ -76,6 +72,79 @@ class ReportService:
             },
             "variances": variances,
         }
+
+    def generate_count_report(self, session_id: int, count_type: str, file_number: Optional[str] = None, section_number: Optional[str] = None) -> Dict:
+        model = FirstCount if count_type == "first" else SecondCount
+        query = self.db.query(model, Product).join(Product, Product.id == model.product_id).filter(model.session_id == session_id)
+        if file_number:
+            query = query.filter(model.file_number == file_number)
+        if section_number:
+            query = query.filter(model.section_number == section_number)
+        rows = query.order_by(model.file_number, model.section_number, Product.barcode).all()
+        return {
+            "session_id": session_id,
+            "count_type": count_type,
+            "file_number": file_number,
+            "section_number": section_number,
+            "counts": [
+                {
+                    "barcode": product.barcode,
+                    "product_name": product.description,
+                    "file_number": count.file_number,
+                    "section_number": count.section_number,
+                    "quantity": float(count.quantity),
+                    "counted_by": count.user_id,
+                    "counted_at": count.counted_at.isoformat(),
+                }
+                for count, product in rows
+            ],
+        }
+
+    def generate_comparison_report(self, session_id: int, file_number: Optional[str] = None, section_number: Optional[str] = None) -> Dict:
+        filters = "AND file_number = :file_number" if file_number else ""
+        section_filter = "AND section_number = :section_number" if section_number else ""
+        query = text(f"""
+            WITH first_totals AS (
+                SELECT product_id, file_number, section_number, SUM(quantity) AS quantity
+                FROM first_counts WHERE session_id = :session_id {filters} {section_filter}
+                GROUP BY product_id, file_number, section_number
+            ), second_totals AS (
+                SELECT product_id, file_number, section_number, SUM(quantity) AS quantity
+                FROM second_counts WHERE session_id = :session_id {filters} {section_filter}
+                GROUP BY product_id, file_number, section_number
+            )
+            SELECT p.barcode, p.description AS product_name,
+                   COALESCE(f.file_number, s.file_number) AS file_number,
+                   COALESCE(f.section_number, s.section_number) AS section_number,
+                   COALESCE(f.quantity, 0) AS first_count_quantity,
+                   COALESCE(s.quantity, 0) AS second_count_quantity
+            FROM first_totals f FULL OUTER JOIN second_totals s
+              ON f.product_id = s.product_id AND f.file_number IS NOT DISTINCT FROM s.file_number
+             AND f.section_number IS NOT DISTINCT FROM s.section_number
+            JOIN products p ON p.id = COALESCE(f.product_id, s.product_id)
+            ORDER BY file_number, section_number, p.barcode
+        """)
+        params = {"session_id": session_id}
+        if file_number: params["file_number"] = file_number
+        if section_number: params["section_number"] = section_number
+        rows = self.db.execute(query, params).mappings().all()
+        comparison = []
+        for row in rows:
+            item = dict(row)
+            item["status"] = "Match" if item["first_count_quantity"] == item["second_count_quantity"] else "Mismatch"
+            comparison.append(item)
+        return {"session_id": session_id, "comparison": comparison}
+
+    def generate_consolidated_report(self, session_id: int, file_number: Optional[str] = None, section_number: Optional[str] = None) -> Dict:
+        query = self.db.query(FirstCount, Product).join(Product, Product.id == FirstCount.product_id).filter(FirstCount.session_id == session_id)
+        if file_number: query = query.filter(FirstCount.file_number == file_number)
+        if section_number: query = query.filter(FirstCount.section_number == section_number)
+        grouped = {}
+        for count, product in query.all():
+            key = (product.barcode, count.file_number, count.section_number)
+            entry = grouped.setdefault(key, {"barcode": product.barcode, "product_name": product.description, "file_number": count.file_number, "section_number": count.section_number, "total_counted_quantity": 0.0})
+            entry["total_counted_quantity"] += float(count.quantity)
+        return {"session_id": session_id, "consolidated": list(grouped.values())}
 
     def generate_duplicate_report(self, session_id: int) -> Dict:
         """List products with multiple count submissions in a session."""
