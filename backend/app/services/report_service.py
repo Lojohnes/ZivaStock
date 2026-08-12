@@ -141,11 +141,23 @@ class ReportService:
         if section_number: query = query.filter(FirstCount.section_number == section_number)
         grouped = {}
         for count, product in query.all():
-            key = (product.barcode, count.file_number)
-            entry = grouped.setdefault(key, {"barcode": product.barcode, "product_name": product.description, "file_number": count.file_number, "section_numbers": [], "total_counted_quantity": 0.0})
+            key = product.barcode
+            entry = grouped.setdefault(key, {
+                "barcode": product.barcode,
+                "product_name": product.description,
+                "file_numbers": [],
+                "section_numbers": [],
+                "total_counted_quantity": 0.0,
+            })
+            if count.file_number not in entry["file_numbers"]:
+                entry["file_numbers"].append(count.file_number)
             if count.section_number not in entry["section_numbers"]:
                 entry["section_numbers"].append(count.section_number)
             entry["total_counted_quantity"] += float(count.quantity)
+
+        for entry in grouped.values():
+            entry["file_numbers"] = ", ".join(str(value) for value in entry["file_numbers"] if value is not None)
+            entry["section_numbers"] = ", ".join(str(value) for value in entry["section_numbers"] if value is not None)
         return {"session_id": session_id, "consolidated": list(grouped.values())}
 
     def generate_duplicate_report(self, session_id: int) -> Dict:
