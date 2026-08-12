@@ -3,6 +3,7 @@ package com.zivastock.di
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.FieldNamingPolicy
+import com.zivastock.BuildConfig
 import com.zivastock.data.remote.AuthInterceptor
 import com.zivastock.data.remote.api.ApiService
 import dagger.Module
@@ -51,7 +52,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/api/v1/") // Default for Android emulator
+            .baseUrl(BuildConfig.API_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()

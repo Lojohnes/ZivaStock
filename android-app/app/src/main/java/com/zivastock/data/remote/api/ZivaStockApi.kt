@@ -10,6 +10,9 @@ interface ZivaStockApi {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequestDto): Response<LoginResponseDto>
 
+    @POST("auth/register")
+    suspend fun register(@Body request: RegisterRequestDto): Response<LoginResponseDto>
+
     @POST("auth/refresh")
     suspend fun refreshToken(@Body request: RefreshRequestDto): Response<LoginResponseDto>
 

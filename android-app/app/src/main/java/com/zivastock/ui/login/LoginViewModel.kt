@@ -48,6 +48,22 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    fun register(firstName: String, lastName: String, email: String, password: String) {
+        _loginState.value = LoginState.Loading
+        viewModelScope.launch {
+            val result = authRepository.register(firstName, lastName, email, password)
+            result.onSuccess {
+                permissionManager.ensureDefaults()
+                permissionManager.sync()
+                sessionManager.sync()
+            }
+            _loginState.value = result.fold(
+                onSuccess = { LoginState.Success(it.isOffline) },
+                onFailure = { LoginState.Error(it.message ?: "Registration failed") }
+            )
+        }
+    }
+
     fun resetState() {
         _loginState.value = LoginState.Idle
     }

@@ -10,6 +10,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
+        buildConfigField("String", "API_BASE_URL", "\"${project.findProperty("apiBaseUrl") ?: "http://10.0.2.2:8000/api/v1/"}\"")
         applicationId = "com.zivastock"
         minSdk = 26
         targetSdk = 34
@@ -40,6 +41,7 @@ android {
     
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

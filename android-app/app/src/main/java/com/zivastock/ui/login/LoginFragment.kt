@@ -1,10 +1,14 @@
 package com.zivastock.ui.login
 
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -38,7 +42,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.tvRegister.setOnClickListener {
-            Toast.makeText(requireContext(), "Registration not yet available", Toast.LENGTH_SHORT).show()
+            showRegistrationDialog()
         }
 
         viewModel.loginState.observe(viewLifecycleOwner) { state ->
@@ -60,6 +64,45 @@ class LoginFragment : Fragment() {
                 else -> hideLoading()
             }
         }
+    }
+
+    private fun showRegistrationDialog() {
+        val container = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 0, 48, 0)
+        }
+        val firstName = EditText(requireContext()).apply { hint = "First name" }
+        val lastName = EditText(requireContext()).apply { hint = "Last name" }
+        val email = EditText(requireContext()).apply {
+            hint = "Email"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        }
+        val password = EditText(requireContext()).apply {
+            hint = "Password (8+ characters)"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+        container.addView(firstName)
+        container.addView(lastName)
+        container.addView(email)
+        container.addView(password)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Create account")
+            .setView(container)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Register", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                if (firstName.text.isNullOrBlank() || lastName.text.isNullOrBlank() || email.text.isNullOrBlank() || password.text.length < 8) {
+                    Toast.makeText(requireContext(), "Complete all fields; password must be at least 8 characters", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                dialog.dismiss()
+                viewModel.register(firstName.text.toString(), lastName.text.toString(), email.text.toString(), password.text.toString())
+            }
+        }
+        dialog.show()
     }
 
     private fun showLoading() {
