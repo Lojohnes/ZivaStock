@@ -28,6 +28,16 @@ class SyncFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.screenTitle.text = getString(com.zivastock.R.string.title_sync)
+        binding.btnSyncNow.setOnClickListener { viewModel.sync() }
+        viewModel.state.observe(viewLifecycleOwner) { state ->
+            binding.btnSyncNow.isEnabled = state !is SyncViewModel.SyncState.Loading
+            binding.tvSyncStatus.text = when (state) {
+                is SyncViewModel.SyncState.Loading -> "Synchronizing products and counts..."
+                is SyncViewModel.SyncState.Success -> state.message
+                is SyncViewModel.SyncState.Error -> "Sync failed: ${state.message}"
+                SyncViewModel.SyncState.Idle -> "Ready to synchronize"
+            }
+        }
     }
 
     override fun onDestroyView() {

@@ -35,6 +35,19 @@ def get_session_progress(
     return report_service.get_session_progress(session_id)
 
 
+@router.get("/duplicates")
+def generate_duplicate_report(
+    session_id: int = Query(...),
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
+):
+    """Generate duplicate count report from synchronized server counts."""
+    try:
+        return ReportService(db).generate_duplicate_report(session_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 @router.get("/missing")
 def generate_missing_stock_report(
     session_id: int = Query(...),

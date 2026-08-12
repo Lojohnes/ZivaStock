@@ -24,12 +24,40 @@ class ReportService:
         if not session:
             raise ValueError("Session not found")
 
-        rows = self.db.execute(
-            text("SELECT * FROM v_product_variance WHERE session_id = :session_id ORDER BY product_id"),
-            {"session_id": session_id},
-        ).mappings().all()
+        # Build the report directly from synchronized counts. The historical
+        # database view only contains rows after adjustments are posted, which
+        # made valid mobile counts invisible in backoffice reports.
+        rows = self.db.execute(text("""
+            SELECT p.id AS product_id, p.barcode, p.description,
+                   p.unit_of_measure, p.system_quantity, p.unit_cost,
+                   COALESCE(SUM(fc.quantity), 0) AS first_count_quantity,
+                   COALESCE(SUM(sc.quantity), 0) AS second_count_quantity
+            FROM products p
+            LEFT JOIN first_counts fc ON fc.product_id = p.id AND fc.session_id = :session_id
+            LEFT JOIN second_counts sc ON sc.product_id = p.id AND sc.session_id = :session_id
+            WHERE p.is_active = TRUE
+            GROUP BY p.id, p.barcode, p.description, p.unit_of_measure, p.system_quantity
+            ORDER BY p.id
+        """), {"session_id": session_id}).mappings().all()
 
-        variances = [dict(r) for r in rows]
+        variances = []
+        for row in rows:
+            item = dict(row)
+            first_qty = float(item.pop("first_count_quantity") or 0)
+            second_qty = float(item.pop("second_count_quantity") or 0)
+            counted_qty = second_qty if second_qty else first_qty
+            system_qty = float(item.get("system_quantity") or 0)
+            unit_cost = float(item.get("unit_cost") or 0)
+            item.update({
+                "first_count_quantity": first_qty,
+                "second_count_quantity": second_qty,
+                "final_quantity": counted_qty,
+                "variance_quantity": counted_qty - system_qty,
+                "variance_value": (counted_qty - system_qty) * unit_cost,
+                "adjustment_type": None,
+                "adjustment_status": None,
+            })
+            variances.append(item)
         overcount = len([v for v in variances if (v["variance_quantity"] or 0) > 0])
         undercount = len([v for v in variances if (v["variance_quantity"] or 0) < 0])
         accurate = len([v for v in variances if (v["variance_quantity"] or 0) == 0])
@@ -47,6 +75,29 @@ class ReportService:
                 "accurate_count": accurate,
             },
             "variances": variances,
+        }
+
+    def generate_duplicate_report(self, session_id: int) -> Dict:
+        """List products with multiple count submissions in a session."""
+        session = self.db.query(StocktakeSession).filter(StocktakeSession.id == session_id).first()
+        if not session:
+            raise ValueError("Session not found")
+        rows = self.db.execute(text("""
+            SELECT p.barcode, p.product_code, p.description,
+                   COUNT(fc.id) AS first_count_entries,
+                   COUNT(sc.id) AS second_count_entries
+            FROM products p
+            LEFT JOIN first_counts fc ON fc.product_id = p.id AND fc.session_id = :session_id
+            LEFT JOIN second_counts sc ON sc.product_id = p.id AND sc.session_id = :session_id
+            GROUP BY p.id, p.barcode, p.product_code, p.description
+            HAVING COUNT(fc.id) > 1 OR COUNT(sc.id) > 1
+            ORDER BY p.description
+        """), {"session_id": session_id}).mappings().all()
+        return {
+            "session_id": session_id,
+            "session_name": session.name,
+            "generated_at": datetime.utcnow().isoformat(),
+            "duplicates": [dict(row) for row in rows],
         }
 
     def generate_missing_stock_report(self, session_id: int) -> Dict:

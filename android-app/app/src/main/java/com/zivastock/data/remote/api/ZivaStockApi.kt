@@ -16,6 +16,9 @@ interface ZivaStockApi {
     @POST("auth/refresh")
     suspend fun refreshToken(@Body request: RefreshRequestDto): Response<LoginResponseDto>
 
+    @POST("products")
+    suspend fun createProduct(@Body product: ProductCreateDto): Response<ProductDto>
+
     @GET("products")
     suspend fun getProducts(@Query("page") page: Int = 1, @Query("limit") limit: Int = 5000): Response<PaginatedProductsResponseDto>
 

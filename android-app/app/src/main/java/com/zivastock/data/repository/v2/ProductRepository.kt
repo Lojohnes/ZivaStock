@@ -5,6 +5,7 @@ import com.zivastock.data.local.database.ZivaStockDatabase
 import com.zivastock.data.local.database.v2.entities.ProductEntity
 import com.zivastock.data.remote.api.ZivaStockApi
 import com.zivastock.data.remote.dto.v2.ProductDto
+import com.zivastock.data.remote.dto.v2.ProductCreateDto
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -38,6 +39,21 @@ class ProductRepository @Inject constructor(
 
     suspend fun delete(entity: ProductEntity) {
         dao.delete(entity)
+    }
+
+    suspend fun createProduct(product: ProductCreateDto): Result<ProductEntity> {
+        return try {
+            val response = api.createProduct(product)
+            if (response.isSuccessful && response.body() != null) {
+                val entity = response.body()!!.toEntity()
+                dao.insert(entity)
+                Result.success(entity)
+            } else {
+                Result.failure(Exception("Failed to create product: ${response.code()}"))
+            }
+        } catch (error: Exception) {
+            Result.failure(error)
+        }
     }
 
     suspend fun fetchFromServer(): Result<Int> {

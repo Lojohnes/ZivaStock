@@ -8,6 +8,7 @@ import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.zivastock.data.local.database.v2.entities.ProductEntity
 import com.zivastock.data.repository.v2.ProductRepository
+import com.zivastock.data.remote.dto.v2.ProductCreateDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,6 +33,17 @@ class ProductsViewModel @Inject constructor(
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun createProduct(product: ProductCreateDto) {
+        viewModelScope.launch {
+            _syncState.value = SyncState.Loading
+            val result = repository.createProduct(product)
+            _syncState.value = result.fold(
+                onSuccess = { SyncState.Success(1) },
+                onFailure = { SyncState.Error(it.message ?: "Product creation failed") }
+            )
+        }
     }
 
     fun sync() {
