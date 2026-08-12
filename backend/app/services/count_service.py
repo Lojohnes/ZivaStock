@@ -93,6 +93,8 @@ class CountService:
             FirstCount.product_id == count_data.product_id,
             FirstCount.shelf_section_id == count_data.shelf_section_id,
             FirstCount.user_id == user_id,
+            FirstCount.file_number == count_data.file_number,
+            FirstCount.section_number == count_data.section_number,
         ).first()
 
         if existing:
@@ -180,6 +182,8 @@ class CountService:
             SecondCount.product_id == count_data.product_id,
             SecondCount.shelf_section_id == count_data.shelf_section_id,
             SecondCount.user_id == user_id,
+            SecondCount.file_number == count_data.file_number,
+            SecondCount.section_number == count_data.section_number,
         ).first()
 
         if existing:

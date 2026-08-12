@@ -29,7 +29,7 @@ class FirstCount(Base):
     user = relationship("User", back_populates="first_counts", foreign_keys=[user_id])
 
     __table_args__ = (
-        UniqueConstraint('session_id', 'product_id', 'shelf_section_id', 'user_id', name='uq_first_count_scope'),
+        UniqueConstraint('session_id', 'product_id', 'shelf_section_id', 'user_id', 'file_number', 'section_number', name='uq_first_count_scope'),
         UniqueConstraint('user_id', 'client_id', name='uq_first_count_client'),
         CheckConstraint("source IN ('mobile', 'web', 'api', 'import')", name='chk_first_counts_source'),
         CheckConstraint("quantity >= 0", name='chk_first_counts_qty_nonneg'),
@@ -63,7 +63,7 @@ class SecondCount(Base):
     first_count = relationship("FirstCount", foreign_keys=[first_count_id])
 
     __table_args__ = (
-        UniqueConstraint('session_id', 'product_id', 'shelf_section_id', 'user_id', name='uq_second_count_scope'),
+        UniqueConstraint('session_id', 'product_id', 'shelf_section_id', 'user_id', 'file_number', 'section_number', name='uq_second_count_scope'),
         UniqueConstraint('user_id', 'client_id', name='uq_second_count_client'),
         CheckConstraint("source IN ('mobile', 'web', 'api', 'import')", name='chk_second_counts_source'),
         CheckConstraint("quantity >= 0", name='chk_second_counts_qty_nonneg'),

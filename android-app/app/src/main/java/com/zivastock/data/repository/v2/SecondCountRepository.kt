@@ -90,7 +90,9 @@ class SecondCountRepository @Inject constructor(
                     val remote = serverDtos.find {
                         it.sessionId == local.sessionId &&
                         it.productId == local.productId &&
-                        it.shelfSectionId == local.shelfSectionId
+                        it.shelfSectionId == local.shelfSectionId &&
+                        it.fileNumber == local.fileNumber &&
+                        it.sectionNumber == local.sectionNumber
                     }
 
                     if (remote != null) {

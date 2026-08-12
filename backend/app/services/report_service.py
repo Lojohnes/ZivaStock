@@ -141,8 +141,10 @@ class ReportService:
         if section_number: query = query.filter(FirstCount.section_number == section_number)
         grouped = {}
         for count, product in query.all():
-            key = (product.barcode, count.file_number, count.section_number)
-            entry = grouped.setdefault(key, {"barcode": product.barcode, "product_name": product.description, "file_number": count.file_number, "section_number": count.section_number, "total_counted_quantity": 0.0})
+            key = (product.barcode, count.file_number)
+            entry = grouped.setdefault(key, {"barcode": product.barcode, "product_name": product.description, "file_number": count.file_number, "section_numbers": [], "total_counted_quantity": 0.0})
+            if count.section_number not in entry["section_numbers"]:
+                entry["section_numbers"].append(count.section_number)
             entry["total_counted_quantity"] += float(count.quantity)
         return {"session_id": session_id, "consolidated": list(grouped.values())}
 
