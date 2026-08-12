@@ -3,6 +3,7 @@ package com.zivastock.data.remote.api
 import com.zivastock.data.remote.dto.LoginRequest
 import com.zivastock.data.remote.dto.LoginResponse
 import com.zivastock.data.remote.dto.ProductDto
+import com.zivastock.data.remote.dto.PaginatedProductsResponse
 import com.zivastock.data.remote.dto.SyncPushRequest
 import com.zivastock.data.remote.dto.SyncPushResponse
 import com.zivastock.data.remote.dto.SyncPullResponse
@@ -35,7 +36,7 @@ interface ApiService {
         @Query("token") token: String,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 50
-    ): Response<List<ProductDto>>
+    ): Response<PaginatedProductsResponse>
     
     @POST("/api/v1/sync/push")
     suspend fun pushCounts(

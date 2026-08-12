@@ -45,7 +45,7 @@ class ProductRepository @Inject constructor(
     suspend fun fetchProductsFromServer(token: String): List<ProductDto>? {
         val response = apiService.getProducts(token)
         return if (response.isSuccessful) {
-            response.body()
+            response.body()?.items
         } else {
             null
         }

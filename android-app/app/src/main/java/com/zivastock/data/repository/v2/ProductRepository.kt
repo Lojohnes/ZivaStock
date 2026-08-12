@@ -44,7 +44,7 @@ class ProductRepository @Inject constructor(
         return try {
             val response = api.getProducts()
             if (response.isSuccessful && response.body() != null) {
-                val entities = response.body()!!.map { it.toEntity() }
+                val entities = response.body()!!.items.map { it.toEntity() }
                 dao.insertAll(entities)
                 Result.success(entities.size)
             } else {

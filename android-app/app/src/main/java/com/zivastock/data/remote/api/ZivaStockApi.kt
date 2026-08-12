@@ -17,7 +17,7 @@ interface ZivaStockApi {
     suspend fun refreshToken(@Body request: RefreshRequestDto): Response<LoginResponseDto>
 
     @GET("products")
-    suspend fun getProducts(): Response<List<ProductDto>>
+    suspend fun getProducts(@Query("page") page: Int = 1, @Query("limit") limit: Int = 5000): Response<PaginatedProductsResponseDto>
 
     @GET("products/barcode/{barcode}")
     suspend fun getProductByBarcode(@Path("barcode") barcode: String): Response<ProductDto>

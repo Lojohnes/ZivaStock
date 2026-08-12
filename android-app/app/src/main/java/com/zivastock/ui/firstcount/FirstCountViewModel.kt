@@ -77,8 +77,7 @@ class FirstCountViewModel @Inject constructor(
             } else {
                 emptyList()
             }
-
-            _sections.value = emptyList()
+            _sections.value = sessionRepository.getSectionsForShelves(_shelves.value.orEmpty().map { it.id })
         }
     }
 
@@ -109,6 +108,8 @@ class FirstCountViewModel @Inject constructor(
     }
 
     fun activeSessionId(): Long? = sessionManager.activeSessionId()
+
+    fun defaultShelfSectionId(): Long = sections.value?.firstOrNull()?.id ?: 0L
 
     fun saveCount(
         fileNumber: String?,

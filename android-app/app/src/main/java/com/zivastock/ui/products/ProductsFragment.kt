@@ -65,8 +65,12 @@ class ProductsFragment : Fragment() {
     private fun com.zivastock.data.local.database.v2.entities.ProductEntity.toProductItem(): ProductItem {
         return ProductItem(
             code = productCode ?: barcode,
+            barcode = barcode,
+            productCode = productCode,
             description = description,
-            qtyOnHand = systemQuantity
+            unitOfMeasure = unitOfMeasure,
+            qtyOnHand = systemQuantity,
+            unitCost = unitCost
         )
     }
 

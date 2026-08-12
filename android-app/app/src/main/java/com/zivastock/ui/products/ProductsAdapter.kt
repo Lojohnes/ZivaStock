@@ -30,9 +30,11 @@ class ProductsAdapter : ListAdapter<ProductItem, ProductsAdapter.ProductViewHold
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: ProductItem) {
-            binding.tvCode.text = item.code
             binding.tvDescription.text = item.description
-            binding.tvQty.text = item.qtyOnHand.toString()
+            binding.tvCode.text = "Barcode: ${item.barcode}  •  Product code: ${item.productCode ?: "-"}"
+            binding.tvQty.text = "System qty: ${item.qtyOnHand}"
+            binding.tvUom.text = "UOM: ${item.unitOfMeasure}"
+            binding.tvCost.text = "Unit cost: ${item.unitCost}"
         }
     }
 
@@ -52,6 +54,10 @@ class ProductsAdapter : ListAdapter<ProductItem, ProductsAdapter.ProductViewHold
  */
 data class ProductItem(
     val code: String,
+    val barcode: String,
+    val productCode: String?,
     val description: String,
-    val qtyOnHand: Double
+    val unitOfMeasure: String,
+    val qtyOnHand: Double,
+    val unitCost: Double,
 )

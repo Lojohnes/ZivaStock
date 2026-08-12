@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -46,7 +45,6 @@ class SecondCountFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.screenTitle.text = getString(R.string.title_secondcount)
 
-        setupSpinners()
         setupQuantityControls()
         setupBarcodeScan()
 
@@ -56,7 +54,6 @@ class SecondCountFragment : Fragment() {
         viewModel.product.observe(viewLifecycleOwner) { product ->
             if (product != null) {
                 binding.etProductName.setText(product.description)
-                binding.etUnit.setText(product.unitOfMeasure)
                 binding.etSystemQuantity.setText(product.systemQuantity.toString())
             }
         }
@@ -64,28 +61,11 @@ class SecondCountFragment : Fragment() {
         viewModel.wrongProduct.observe(viewLifecycleOwner) { isWrong ->
             if (isWrong) {
                 binding.etProductName.setText("##WRONG PRODUCT CODE##")
-                binding.etUnit.text?.clear()
                 binding.etSystemQuantity.text?.clear()
             } else if (viewModel.product.value == null) {
                 binding.etProductName.text?.clear()
-                binding.etUnit.text?.clear()
                 binding.etSystemQuantity.text?.clear()
             }
-        }
-
-        viewModel.locations.observe(viewLifecycleOwner) { locations ->
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, locations.map { it.name })
-            binding.spinnerLocation.setAdapter(adapter)
-        }
-
-        viewModel.shelves.observe(viewLifecycleOwner) { shelves ->
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, shelves.map { it.name })
-            binding.spinnerShelf.setAdapter(adapter)
-        }
-
-        viewModel.sections.observe(viewLifecycleOwner) { sections ->
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, sections.map { it.name })
-            binding.spinnerSection.setAdapter(adapter)
         }
 
         viewModel.saveResult.observe(viewLifecycleOwner) { result ->
@@ -96,23 +76,6 @@ class SecondCountFragment : Fragment() {
             }
             result.onFailure { error ->
                 Toast.makeText(requireContext(), "Save failed: ${error.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    private fun setupSpinners() {
-        binding.spinnerLocation.setOnItemClickListener { _, _, position, _ ->
-            viewModel.locations.value?.getOrNull(position)?.id?.let { locationId ->
-                viewModel.onLocationSelected(locationId)
-                binding.spinnerShelf.text?.clear()
-                binding.spinnerSection.text?.clear()
-            }
-        }
-
-        binding.spinnerShelf.setOnItemClickListener { _, _, position, _ ->
-            viewModel.shelves.value?.getOrNull(position)?.id?.let { shelfId ->
-                viewModel.onShelfSelected(shelfId)
-                binding.spinnerSection.text?.clear()
             }
         }
     }
@@ -139,9 +102,11 @@ class SecondCountFragment : Fragment() {
     }
 
     private fun saveSecondCount() {
-        val sectionId = viewModel.sections.value
-            ?.find { it.name == binding.spinnerSection.text.toString() }
-            ?.id ?: 0L
+        val sectionId = viewModel.defaultShelfSectionId()
+        if (sectionId == 0L) {
+            Toast.makeText(requireContext(), "No shelf section is configured for the active session", Toast.LENGTH_LONG).show()
+            return
+        }
 
         val quantity = binding.etQuantity.text.toString().toDoubleOrNull() ?: 0.0
 
@@ -149,7 +114,7 @@ class SecondCountFragment : Fragment() {
             fileNumber = binding.spinnerFileNo.text.toString(),
             shelfSectionId = sectionId,
             quantity = quantity,
-            remarks = binding.etRemarks.text.toString()
+            remarks = null
         )
     }
 
@@ -157,9 +122,7 @@ class SecondCountFragment : Fragment() {
         binding.etQuantity.setText("0.00")
         binding.etBarcode.text?.clear()
         binding.etProductName.text?.clear()
-        binding.etUnit.text?.clear()
         binding.etSystemQuantity.text?.clear()
-        binding.etRemarks.text?.clear()
     }
 
     override fun onDestroyView() {
