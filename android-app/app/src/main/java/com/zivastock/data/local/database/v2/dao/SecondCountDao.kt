@@ -19,6 +19,9 @@ interface SecondCountDao {
     @Query("SELECT * FROM v2_second_counts WHERE id = :id")
     suspend fun getById(id: Long): SecondCountEntity?
 
+    @Query("SELECT * FROM v2_second_counts WHERE sessionId = :sessionId AND productId = :productId AND userId = :userId AND ((fileNumber = :fileNumber) OR (fileNumber IS NULL AND :fileNumber IS NULL)) AND ((sectionNumber = :sectionNumber) OR (sectionNumber IS NULL AND :sectionNumber IS NULL)) LIMIT 1")
+    suspend fun findByScope(sessionId: Long, productId: Long, userId: Long, fileNumber: String?, sectionNumber: String?): SecondCountEntity?
+
     @Query("UPDATE v2_second_counts SET isSynced = 1, syncedAt = :syncedAt WHERE id = :id")
     suspend fun markAsSynced(id: Long, syncedAt: String)
 

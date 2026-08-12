@@ -36,14 +36,20 @@ class SecondCountRepository @Inject constructor(
 
     suspend fun save(entity: SecondCountEntity): Long {
         val id = database.withTransaction {
-            val insertedId = dao.insert(entity)
+            val existing = dao.findByScope(entity.sessionId, entity.productId, entity.userId, entity.fileNumber, entity.sectionNumber)
+            val saved = if (existing != null) {
+                entity.copy(id = existing.id)
+            } else {
+                entity.copy(id = dao.insert(entity))
+            }
+            if (existing != null) dao.update(saved)
             syncQueueManager.enqueue(
                 tableName = queueTable,
-                recordId = insertedId,
+                recordId = saved.id,
                 operation = "insert",
-                payload = entity
+                payload = saved
             )
-            insertedId
+            saved.id
         }
 
         auditLogRepository.log(
