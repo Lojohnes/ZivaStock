@@ -122,7 +122,7 @@ class SecondCountFragment : Fragment() {
         val quantity = binding.etQuantity.text.toString().toDoubleOrNull() ?: 0.0
 
         viewModel.saveCount(
-            fileNumber = binding.spinnerFileNo.text.toString(),
+            fileNumber = binding.etFileNumber.text.toString(),
             sectionNumber = binding.etSectionNumber.text.toString(),
             shelfSectionId = sectionId,
             quantity = quantity,
@@ -134,6 +134,7 @@ class SecondCountFragment : Fragment() {
         binding.etQuantity.text?.clear()
         binding.etBarcode.text?.clear()
         binding.etProductName.text?.clear()
+        binding.etFileNumber.text?.clear()
         binding.etSectionNumber.text?.clear()
     }
 
