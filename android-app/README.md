@@ -51,4 +51,17 @@ android-app/
 
 ## Backend URL
 
-The default API URL is `http://10.0.2.2:8000` for the Android emulator. Update this in `NetworkModule.kt` if needed.
+The default API URL is the deployed Render API:
+
+```text
+https://zivastock-api.onrender.com/api/v1/
+```
+
+For local emulator development, override it during the build:
+
+```powershell
+.\gradlew.bat assembleDebug -PapiBaseUrl=http://10.0.2.2:8000/api/v1/
+```
+
+For a physical device, use a reachable HTTPS server or the computer LAN address.
+The API base URL can be overridden without changing source code using `-PapiBaseUrl`.
