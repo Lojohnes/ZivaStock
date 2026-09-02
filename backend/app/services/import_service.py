@@ -180,9 +180,19 @@ class ImportService:
         """Safely get a cell value using field mapping"""
         col = mapping.get(field, field)
         val = row.get(col, default)
-        if val is None or (isinstance(val, float) and pd.isna(val)):
+        if val is None or pd.isna(val):
             return default
         return val
+
+    def _safe_non_negative_number(self, value, default=0.0) -> float:
+        """Convert imported numeric values to valid non-negative product values."""
+        try:
+            number = float(value)
+            if not pd.isna(number) and number != float('inf') and number != float('-inf'):
+                return max(number, 0.0)
+        except (TypeError, ValueError):
+            pass
+        return default
 
     def _process_dataframe(self, df: 'pd.DataFrame', field_mapping: dict, batch_id: int) -> dict:
         """Shared logic to upsert products from a DataFrame in batches"""
@@ -224,8 +234,12 @@ class ImportService:
                     'product_code': str(self._get_cell(row, field_mapping, 'product_code', '')).strip() or None,
                     'description': str(self._get_cell(row, field_mapping, 'description', '')).strip(),
                     'unit_of_measure': str(self._get_cell(row, field_mapping, 'unit_of_measure', 'EA')).strip() or 'EA',
-                    'system_quantity': float(self._get_cell(row, field_mapping, 'system_quantity', 0) or 0),
-                    'unit_cost': float(self._get_cell(row, field_mapping, 'unit_cost', 0) or 0),
+                    'system_quantity': self._safe_non_negative_number(
+                        self._get_cell(row, field_mapping, 'system_quantity', 0)
+                    ),
+                    'unit_cost': self._safe_non_negative_number(
+                        self._get_cell(row, field_mapping, 'unit_cost', 0)
+                    ),
                 }
                 candidate_rows_by_barcode[barcode] = (index + 2, product_data)
             except Exception as e:
