@@ -22,7 +22,7 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://ziva-stock-8l8rvwusa-lojohnes-projects.vercel.app
+        value: https://ziva-stock-ov8p971h2-lojohnes-projects.vercel.app
       - key: UPLOAD_DIR
         value: /tmp/uploads
 

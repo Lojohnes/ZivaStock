@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS — stored as a comma-separated string to avoid JSON-parsing issues
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000,http://localhost:5173,https://ziva-stock-8l8rvwusa-lojohnes-projects.vercel.app"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000,http://localhost:5173,https://ziva-stock-ov8p971h2-lojohnes-projects.vercel.app"
 
     # API
     API_V1_PREFIX: str = "/api/v1"
