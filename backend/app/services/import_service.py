@@ -203,7 +203,9 @@ class ImportService:
                          'qty on hand', 'sage', 'page', 'description'}
 
         # Build a deduplicated list of valid product rows keyed by barcode.
-        candidate_rows = []
+        # If a source file repeats a barcode, the last row is the authoritative
+        # product record and prevents a unique-index failure during batch insert.
+        candidate_rows_by_barcode = {}
         for index, row in df.iterrows():
             barcode = str(self._get_cell(row, field_mapping, 'barcode', '')).strip()
             # Skip empty, header repeat rows, date strings, and long text (report titles)
@@ -225,10 +227,12 @@ class ImportService:
                     'system_quantity': float(self._get_cell(row, field_mapping, 'system_quantity', 0) or 0),
                     'unit_cost': float(self._get_cell(row, field_mapping, 'unit_cost', 0) or 0),
                 }
-                candidate_rows.append((index + 2, product_data))
+                candidate_rows_by_barcode[barcode] = (index + 2, product_data)
             except Exception as e:
                 error_count += 1
                 errors.append(f"Row {index + 2}: {str(e)}")
+
+        candidate_rows = list(candidate_rows_by_barcode.values())
 
         # For large files, process in chunks to avoid per-row commits/timeouts.
         CHUNK_SIZE = 500
