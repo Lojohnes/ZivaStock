@@ -42,7 +42,7 @@ import com.zivastock.data.local.database.v2.dao.SyncAuditLogDao
         entities = [
             ProductEntity::class, ProductCategoryEntity::class, LocationEntity::class, ShelfEntity::class, ShelfSectionEntity::class, StocktakeSessionEntity::class, SessionAssignmentEntity::class, FirstCountEntity::class, SecondCountEntity::class, UserEntity::class, RoleEntity::class, PermissionEntity::class, RolePermissionCrossRefEntity::class, UserRoleCrossRefEntity::class, SyncQueueItemEntity::class, SyncAuditLogEntity::class
         ],
-        version = 1,
+        version = 2,
         exportSchema = false
     )
     abstract class ZivaStockDatabase : RoomDatabase() {

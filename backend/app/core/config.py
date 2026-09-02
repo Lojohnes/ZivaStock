@@ -1,5 +1,6 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from typing import List, Optional
 from urllib.parse import quote_plus
 from pathlib import Path
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     DB_NAME: str = "zivastockdb"
     DB_USER: str = "postgres"
     DB_PASSWORD: str = ""
+    DATABASE_URL_ENV: Optional[str] = Field(default=None, validation_alias="DATABASE_URL")
 
     # Redis
     REDIS_HOST: str = "localhost"
@@ -56,11 +58,16 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
+        if self.DATABASE_URL_ENV:
+            return self.DATABASE_URL_ENV.replace("postgres://", "postgresql://", 1)
         pwd = quote_plus(self.DB_PASSWORD)
         return f"postgresql://{self.DB_USER}:{pwd}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     @property
     def ASYNC_DATABASE_URL(self) -> str:
+        if self.DATABASE_URL_ENV:
+            url = self.DATABASE_URL_ENV.replace("postgres://", "postgresql://", 1)
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
         pwd = quote_plus(self.DB_PASSWORD)
         return f"postgresql+asyncpg://{self.DB_USER}:{pwd}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
