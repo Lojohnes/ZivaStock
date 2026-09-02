@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os
 
 from app.core.config import settings
 from app.models.user import User
@@ -126,7 +127,7 @@ def seed():
         if not admin:
             admin = User(
                 email="admin@zivastock.com",
-                password_hash=get_password_hash("Admin@12345"),
+                password_hash=get_password_hash(os.getenv("SEED_ADMIN_PASSWORD", "Admin@12345")),
                 first_name="System",
                 last_name="Admin",
                 role_id=admin_role.id,

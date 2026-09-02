@@ -21,6 +21,8 @@ services:
         value: production
       - key: JWT_SECRET_KEY
         generateValue: true
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
       - key: CORS_ORIGINS
         value: https://ziva-stock-ov8p971h2-lojohnes-projects.vercel.app
       - key: UPLOAD_DIR
